@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enrollment Predictions Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <header>
+    <h1>Enrollment Predictions Explorer</h1>
+    <p class="subtitle">Drop in a model-output spreadsheet to explore <code>yhat_pr</code> across the cohort and per student. Files are processed in your browser &mdash; nothing is uploaded.</p>
+  </header>
+
+  <main>
+    <!-- Upload screen -->
+    <section id="upload-screen">
+      <div id="dropzone">
+        <p class="dropzone-icon">&#x2191;</p>
+        <p class="dropzone-text">Drop <code>SampleOutput.xlsx</code> here</p>
+        <p class="dropzone-or">or</p>
+        <label class="file-button">
+          Choose file
+          <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
+        </label>
+        <p id="upload-status" class="upload-status"></p>
+      </div>
+    </section>
+
+    <!-- App screen (hidden until file loaded) -->
+    <section id="app-screen" hidden>
+      <!-- Filter bar -->
+      <div id="filter-bar">
+        <div class="filter-group">
+          <label for="f-appterm">App Term</label>
+          <select id="f-appterm"><option value="">All</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="f-confirmed">Confirmed</label>
+          <select id="f-confirmed">
+            <option value="">All</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="f-withdrawn">Withdrawn</label>
+          <select id="f-withdrawn">
+            <option value="">All</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="f-aequitas">Aequitas</label>
+          <select id="f-aequitas">
+            <option value="">All</option>
+            <option value="0">Not Aequitas</option>
+            <option value="1">Invited</option>
+            <option value="2">Applicant/Waitlist</option>
+            <option value="3">Accepted</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="f-legacy">Legacy</label>
+          <select id="f-legacy">
+            <option value="">All</option>
+            <option value="any">Any legacy</option>
+            <option value="sib">Sibling</option>
+            <option value="parent">Parent</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="f-female">Gender</label>
+          <select id="f-female">
+            <option value="">All</option>
+            <option value="1">Female</option>
+            <option value="0">Male</option>
+          </select>
+        </div>
+        <div class="filter-group decile-group">
+          <label>Decile <span id="decile-label">1&ndash;10</span></label>
+          <div class="decile-controls">
+            <input type="range" id="f-decile-min" min="1" max="10" value="1">
+            <input type="range" id="f-decile-max" min="1" max="10" value="10">
+          </div>
+        </div>
+        <div class="filter-spacer"></div>
+        <div class="filter-meta">
+          <span id="cohort-count">N = 0</span>
+          <button id="save-slice" type="button" title="Snapshot current filter as an overlay on the histogram">+ Save as slice</button>
+          <button id="reset-filters" type="button">Reset</button>
+          <button id="reload-file" type="button">New file</button>
+        </div>
+      </div>
+
+      <!-- Saved slice chips (only shown when slices exist) -->
+      <div id="slices-bar">
+        <span class="slices-label">Slices:</span>
+        <div id="slices-list"></div>
+        <button id="clear-slices" type="button">Clear all</button>
+      </div>
+
+      <!-- Tabs -->
+      <nav id="tabs">
+        <button class="tab active" data-tab="overall">Overall</button>
+        <button class="tab" data-tab="individual">Individual</button>
+      </nav>
+
+      <!-- Overall view -->
+      <section id="view-overall" class="view active">
+        <div id="summary-row"></div>
+        <div id="overall-chart"></div>
+        <p class="chart-help">Histogram of predicted enrollment probability for the filtered cohort. Toggle the confirmed/not-confirmed series with the legend to inspect calibration.</p>
+      </section>
+
+      <!-- Individual view -->
+      <section id="view-individual" class="view" hidden>
+        <div id="search-wrap">
+          <input type="text" id="student-search" placeholder="Search by name or application ID&hellip;" autocomplete="off">
+          <ul id="search-results" hidden></ul>
+        </div>
+        <div id="student-card-wrap">
+          <p class="hint">Pick a student above to see their detail card.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
