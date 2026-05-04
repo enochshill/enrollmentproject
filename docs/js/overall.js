@@ -6,7 +6,7 @@
 import { applyFilterState } from "./filters.js";
 import { getSlices } from "./slices.js";
 
-let yMode = "percent"; // "percent" | "count" — only consulted in slice mode
+let yMode = "percent"; // "percent" | "count" | "ratio" — only consulted in slice mode
 let lastRender = null; // { filtered, allRows } so the toggle can re-render without app help
 let controlsBound = false;
 
@@ -16,6 +16,7 @@ function bindChartControls() {
   if (!wrap) return;
   for (const btn of wrap.querySelectorAll(".seg")) {
     btn.addEventListener("click", () => {
+      if (btn.disabled) return;
       const mode = btn.dataset.ymode;
       if (mode === yMode) return;
       yMode = mode;
@@ -24,6 +25,30 @@ function bindChartControls() {
     });
   }
   controlsBound = true;
+}
+
+function binCounts(values, start, end, size) {
+  const n = Math.round((end - start) / size);
+  const counts = new Array(n).fill(0);
+  for (const v of values) {
+    if (!Number.isFinite(v) || v < start || v > end) continue;
+    let idx = Math.floor((v - start) / size);
+    if (idx >= n) idx = n - 1; // include right edge in last bin
+    counts[idx] += 1;
+  }
+  return counts;
+}
+
+function binCenters(start, end, size) {
+  const n = Math.round((end - start) / size);
+  return Array.from({ length: n }, (_, i) => start + size * (i + 0.5));
+}
+
+function yAxisTitle(slices) {
+  if (slices.length === 0) return "Students";
+  if (yMode === "ratio" && slices.length >= 2) return `Share of ${slices[0].name}`;
+  if (yMode === "percent") return "% of slice";
+  return "Students";
 }
 
 function mean(values) {
@@ -92,10 +117,27 @@ function renderChart(filtered, allRows) {
         hovertemplate: "Predicted prob %{x}<br>%{y} not confirmed<extra></extra>",
       },
     );
+  } else if (yMode === "ratio") {
+    // Per-bin share of slice 1: numerator slice count / slice-1 count, by yhat_pr bin.
+    // Slice 1 itself is the denominator and isn't drawn (would be a flat 1.0).
+    const denomXs = applyFilterState(allRows, slices[0].filter).map((r) => r.yhat_pr);
+    const denomCounts = binCounts(denomXs, xbins.start, xbins.end, xbins.size);
+    const centers = binCenters(xbins.start, xbins.end, xbins.size);
+    for (const s of slices.slice(1)) {
+      const numXs = applyFilterState(allRows, s.filter).map((r) => r.yhat_pr);
+      const numCounts = binCounts(numXs, xbins.start, xbins.end, xbins.size);
+      const ratios = numCounts.map((n, i) => (denomCounts[i] === 0 ? null : n / denomCounts[i]));
+      const customdata = numCounts.map((n, i) => [n, denomCounts[i]]);
+      traces.push({
+        x: centers, y: ratios, customdata,
+        type: "bar", name: `${s.name} ÷ ${slices[0].name}`,
+        marker: { color: s.color }, opacity: 0.7,
+        width: xbins.size * 0.9,
+        hovertemplate: `Predicted prob %{x:.3f}<br>%{y:.3f} (%{customdata[0]} / %{customdata[1]})<extra>${s.name} ÷ ${slices[0].name}</extra>`,
+      });
+    }
   } else {
-    // Slice mode: one trace per slice plus a "Current" trace. Default y-axis is
-    // percent so cohorts of different sizes are comparable; user can toggle to
-    // raw counts via the chart controls.
+    // percent / count modes: one trace per slice plus a "Current" trace.
     const histnorm = yMode === "percent" ? "percent" : "";
     const yFmt = yMode === "percent" ? "%{y:.1f}%" : "%{y} students";
     const cur = filtered.map((r) => r.yhat_pr).filter((v) => Number.isFinite(v));
@@ -135,7 +177,7 @@ function renderChart(filtered, allRows) {
     barmode: "overlay",
     margin: { t: 30, r: 20, b: 50, l: 60 },
     xaxis: { title: "Predicted enrollment probability", range: [0, 1], gridcolor: "#eef1f7" },
-    yaxis: { title: slices.length > 0 && yMode === "percent" ? "% of slice" : "Students", gridcolor: "#eef1f7" },
+    yaxis: { title: yAxisTitle(slices), gridcolor: "#eef1f7" },
     plot_bgcolor: "white",
     paper_bgcolor: "white",
     legend: { orientation: "h", x: 0, y: 1.12 },
@@ -149,9 +191,18 @@ function renderChart(filtered, allRows) {
 export function renderOverall(filtered, allRows) {
   bindChartControls();
   lastRender = { filtered, allRows };
-  const sliceMode = getSlices().length > 0;
+  const sliceCount = getSlices().length;
   const controls = document.getElementById("chart-controls");
-  if (controls) controls.hidden = !sliceMode;
+  if (controls) {
+    controls.hidden = sliceCount === 0;
+    // Ratio mode requires >=2 slices; demote to percent if a slice was removed.
+    if (yMode === "ratio" && sliceCount < 2) yMode = "percent";
+    for (const btn of controls.querySelectorAll(".seg")) {
+      const mode = btn.dataset.ymode;
+      btn.disabled = mode === "ratio" && sliceCount < 2;
+      btn.classList.toggle("active", mode === yMode);
+    }
+  }
   renderSummary(filtered);
   renderChart(filtered, allRows);
 }

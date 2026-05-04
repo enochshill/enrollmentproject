@@ -235,8 +235,9 @@ main { padding: 24px 32px 60px; }
   color: var(--muted);
 }
 .segmented .seg:last-child { border-right: none; }
-.segmented .seg:hover:not(.active) { background: var(--accent-soft); color: var(--text); }
+.segmented .seg:hover:not(.active):not(:disabled) { background: var(--accent-soft); color: var(--text); }
 .segmented .seg.active { background: var(--accent); color: white; font-weight: 600; }
+.segmented .seg:disabled { color: #b8bcc6; cursor: not-allowed; background: #f4f5f8; }
 #overall-chart {
   background: var(--panel);
   border: 1px solid var(--border);
