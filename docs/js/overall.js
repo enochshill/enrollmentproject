@@ -22,12 +22,10 @@ const X_AXIS_CONFIGS = {
 
 // Which y-modes are valid for a given (xMode, sliceCount).
 function yModesFor(xMode, sliceCount) {
-  if (xMode === "yhat") {
-    const modes = ["percent", "count"];
-    if (sliceCount >= 2) modes.push("ratio");
-    return modes;
-  }
-  return ["count", "yhat_mean"];
+  const modes = ["percent", "count"];
+  if (sliceCount >= 2) modes.push("ratio");
+  if (xMode !== "yhat") modes.push("yhat_mean");
+  return modes;
 }
 
 function defaultYModeFor(xMode) {
