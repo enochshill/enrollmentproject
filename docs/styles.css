@@ -204,6 +204,39 @@ main { padding: 24px 32px 60px; }
 }
 .summary-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); font-weight: 600; }
 .summary-card .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+#chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+#chart-controls[hidden] { display: none; }
+.chart-controls-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  overflow: hidden;
+}
+.segmented .seg {
+  padding: 5px 12px;
+  background: white;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+}
+.segmented .seg:last-child { border-right: none; }
+.segmented .seg:hover:not(.active) { background: var(--accent-soft); color: var(--text); }
+.segmented .seg.active { background: var(--accent); color: white; font-weight: 600; }
 #overall-chart {
   background: var(--panel);
   border: 1px solid var(--border);

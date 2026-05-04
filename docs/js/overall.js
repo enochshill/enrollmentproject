@@ -1,10 +1,30 @@
 // Cohort-level view: yhat_pr histogram + summary stats + confirmed-vs-not overlay.
 // In slice mode (>=1 saved slice) it switches to one trace per slice, plus a
-// "Current filter" trace, normalized by percent so cohorts of different sizes
-// stay comparable.
+// "Current filter" trace. Y-axis defaults to percent so cohorts of different
+// sizes stay comparable, but the user can toggle to raw student counts.
 
 import { applyFilterState } from "./filters.js";
 import { getSlices } from "./slices.js";
+
+let yMode = "percent"; // "percent" | "count" — only consulted in slice mode
+let lastRender = null; // { filtered, allRows } so the toggle can re-render without app help
+let controlsBound = false;
+
+function bindChartControls() {
+  if (controlsBound) return;
+  const wrap = document.getElementById("chart-controls");
+  if (!wrap) return;
+  for (const btn of wrap.querySelectorAll(".seg")) {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.ymode;
+      if (mode === yMode) return;
+      yMode = mode;
+      for (const b of wrap.querySelectorAll(".seg")) b.classList.toggle("active", b.dataset.ymode === yMode);
+      if (lastRender) renderChart(lastRender.filtered, lastRender.allRows);
+    });
+  }
+  controlsBound = true;
+}
 
 function mean(values) {
   if (values.length === 0) return null;
@@ -73,22 +93,26 @@ function renderChart(filtered, allRows) {
       },
     );
   } else {
-    // Slice mode: percent-normalized so cohorts of different sizes are comparable.
+    // Slice mode: one trace per slice plus a "Current" trace. Default y-axis is
+    // percent so cohorts of different sizes are comparable; user can toggle to
+    // raw counts via the chart controls.
+    const histnorm = yMode === "percent" ? "percent" : "";
+    const yFmt = yMode === "percent" ? "%{y:.1f}%" : "%{y} students";
     const cur = filtered.map((r) => r.yhat_pr).filter((v) => Number.isFinite(v));
     traces.push({
       x: cur, type: "histogram", name: `Current filter (n=${cur.length.toLocaleString()})`,
-      xbins, histnorm: "percent",
+      xbins, histnorm,
       marker: { color: "#2f6feb" }, opacity: 0.5,
-      hovertemplate: "Predicted prob %{x}<br>%{y:.1f}%<extra>Current</extra>",
+      hovertemplate: `Predicted prob %{x}<br>${yFmt}<extra>Current</extra>`,
     });
     for (const s of slices) {
       const xs = applyFilterState(allRows, s.filter).map((r) => r.yhat_pr).filter((v) => Number.isFinite(v));
       traces.push({
         x: xs, type: "histogram",
         name: `${s.name} (n=${xs.length.toLocaleString()})`,
-        xbins, histnorm: "percent",
+        xbins, histnorm,
         marker: { color: s.color }, opacity: 0.5,
-        hovertemplate: `Predicted prob %{x}<br>%{y:.1f}%<extra>${s.name}</extra>`,
+        hovertemplate: `Predicted prob %{x}<br>${yFmt}<extra>${s.name}</extra>`,
       });
     }
   }
@@ -111,7 +135,7 @@ function renderChart(filtered, allRows) {
     barmode: "overlay",
     margin: { t: 30, r: 20, b: 50, l: 60 },
     xaxis: { title: "Predicted enrollment probability", range: [0, 1], gridcolor: "#eef1f7" },
-    yaxis: { title: slices.length > 0 ? "% of slice" : "Students", gridcolor: "#eef1f7" },
+    yaxis: { title: slices.length > 0 && yMode === "percent" ? "% of slice" : "Students", gridcolor: "#eef1f7" },
     plot_bgcolor: "white",
     paper_bgcolor: "white",
     legend: { orientation: "h", x: 0, y: 1.12 },
@@ -123,6 +147,11 @@ function renderChart(filtered, allRows) {
 }
 
 export function renderOverall(filtered, allRows) {
+  bindChartControls();
+  lastRender = { filtered, allRows };
+  const sliceMode = getSlices().length > 0;
+  const controls = document.getElementById("chart-controls");
+  if (controls) controls.hidden = !sliceMode;
   renderSummary(filtered);
   renderChart(filtered, allRows);
 }

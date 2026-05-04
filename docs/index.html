@@ -113,6 +113,13 @@
       <!-- Overall view -->
       <section id="view-overall" class="view active">
         <div id="summary-row"></div>
+        <div id="chart-controls" hidden>
+          <span class="chart-controls-label">Y-axis</span>
+          <div class="segmented" role="group" aria-label="Y-axis units">
+            <button type="button" class="seg active" data-ymode="percent">% of slice</button>
+            <button type="button" class="seg" data-ymode="count">Students</button>
+          </div>
+        </div>
         <div id="overall-chart"></div>
         <p class="chart-help">Histogram of predicted enrollment probability for the filtered cohort. Toggle the confirmed/not-confirmed series with the legend to inspect calibration.</p>
       </section>
