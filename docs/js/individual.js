@@ -154,6 +154,15 @@ function fmtNum(v, digits = 3) { return Number.isFinite(v) ? v.toFixed(digits) :
 function fmtMiles(v) { return Number.isFinite(v) ? `${v.toFixed(0)} mi` : "—"; }
 function fmtMoney(v) { return Number.isFinite(v) && v > 0 ? `$${Math.round(v).toLocaleString()}` : "—"; }
 
+// Excel serial date → display string. Excel epoch is 1899-12-30 UTC; 25569 days
+// from there to 1970-01-01 (the bug-compensated offset SheetJS produces).
+function fmtDate(serial) {
+  if (!Number.isFinite(serial)) return "—";
+  const d = new Date(Math.round((serial - 25569) * 86400000));
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+}
+
 function renderCard(r) {
   const wrap = document.getElementById("student-card-wrap");
   const tiles = ACTIVITY_CATEGORIES.map((c) => activityTile(r, c)).join("");
@@ -165,6 +174,9 @@ function renderCard(r) {
 
   const contextRows = [
     ["App Term", r.AppTerm || "—"],
+    ["Admit date", fmtDate(r.admit_dt)],
+    ["First offer date", fmtDate(r.firstoffer_dt)],
+    ["Latest offer date", fmtDate(r.latestoffer_dt)],
     ["Distance", fmtMiles(r.milesfromcampus)],
     ["Legacy", legacyLabel(r)],
     ["Aequitas", lookup(AEQUITAS, r.aequitas)],

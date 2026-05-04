@@ -114,11 +114,23 @@
       <section id="view-overall" class="view active">
         <div id="summary-row"></div>
         <div id="chart-controls" hidden>
-          <span class="chart-controls-label">Y-axis</span>
-          <div class="segmented" role="group" aria-label="Y-axis units">
-            <button type="button" class="seg active" data-ymode="percent">% of slice</button>
-            <button type="button" class="seg" data-ymode="count">Students</button>
-            <button type="button" class="seg" data-ymode="ratio" title="Each later slice plotted per-bin as its share of slice 1">Share of slice 1</button>
+          <div class="chart-controls-row">
+            <span class="chart-controls-label">X-axis</span>
+            <div class="segmented" role="group" aria-label="X-axis variable">
+              <button type="button" class="seg active" data-xmode="yhat">yhat_pr</button>
+              <button type="button" class="seg" data-xmode="grant">Aid grant</button>
+              <button type="button" class="seg" data-xmode="superscore">Test superscore</button>
+              <button type="button" class="seg" data-xmode="distance">Distance</button>
+            </div>
+          </div>
+          <div class="chart-controls-row" id="yaxis-row">
+            <span class="chart-controls-label">Y-axis</span>
+            <div class="segmented" role="group" aria-label="Y-axis units">
+              <button type="button" class="seg active" data-ymode="percent">% of slice</button>
+              <button type="button" class="seg" data-ymode="count">Students</button>
+              <button type="button" class="seg" data-ymode="ratio" title="Each later slice plotted per-bin as its share of slice 1">Share of slice 1</button>
+              <button type="button" class="seg" data-ymode="yhat_mean" title="Mean yhat_pr per bin">yhat_pr (mean)</button>
+            </div>
           </div>
         </div>
         <div id="overall-chart"></div>

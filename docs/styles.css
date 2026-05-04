@@ -206,11 +206,14 @@ main { padding: 24px 32px 60px; }
 .summary-card .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
 #chart-controls {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 8px;
 }
 #chart-controls[hidden] { display: none; }
+.chart-controls-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chart-controls-row .chart-controls-label { min-width: 52px; }
+.segmented .seg[hidden] { display: none; }
 .chart-controls-label {
   font-size: 11px;
   text-transform: uppercase;
