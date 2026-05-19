@@ -425,6 +425,28 @@ export function renderOverall(filtered, allRows) {
     syncControls(sliceCount);
   }
   renderSummary(filtered);
+  if (filtered.length === 0) {
+    renderEmptyState();
+    return;
+  }
   renderChart(filtered, allRows);
   renderCalibration(filtered);
+}
+
+function renderEmptyState() {
+  const chart = document.getElementById("overall-chart");
+  const calChart = document.getElementById("calibration-chart");
+  const liftWrap = document.getElementById("lift-table-wrap");
+  if (chart) {
+    chart.innerHTML = `
+      <div class="empty-state">
+        <p>No students match the current filter.</p>
+        <button class="empty-state-btn" type="button">Clear filters</button>
+      </div>
+    `;
+    const btn = chart.querySelector(".empty-state-btn");
+    if (btn) btn.addEventListener("click", () => document.getElementById("reset-filters").click());
+  }
+  if (calChart) calChart.innerHTML = "";
+  if (liftWrap) liftWrap.innerHTML = "";
 }
