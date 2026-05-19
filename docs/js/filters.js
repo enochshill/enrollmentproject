@@ -37,7 +37,10 @@ export function applyFilters(rows) {
 }
 
 export function applyFilterState(rows, f) {
-  return rows.filter((r) => {
+  // Apply the non-decile filters first. Deciles are computed dynamically below
+  // against this intermediate cohort, so the slider always means "deciles of
+  // what you're currently looking at" rather than the static upstream column.
+  const beforeDecile = rows.filter((r) => {
     if (f.appTerm && r.AppTerm !== f.appTerm) return false;
     if (f.confirmed !== "" && Number(r.confirmed) !== Number(f.confirmed)) return false;
     if (f.withdrawn !== "" && Number(r.withdrawn) !== Number(f.withdrawn)) return false;
@@ -52,11 +55,27 @@ export function applyFilterState(rows, f) {
       if (f.legacy === "parent" && !par) return false;
       if (f.legacy === "none" && any) return false;
     }
-    if (r.decile !== null && r.decile !== undefined) {
-      const d = Number(r.decile);
-      if (d < f.decileMin || d > f.decileMax) return false;
-    }
     return true;
+  });
+
+  if (f.decileMin === 1 && f.decileMax === 10) return beforeDecile;
+
+  const sortedYhats = beforeDecile
+    .map((r) => r.yhat_pr)
+    .filter((v) => Number.isFinite(v))
+    .sort((a, b) => a - b);
+  if (sortedYhats.length === 0) return beforeDecile;
+
+  // Decile 1 = bottom 10% of yhat_pr; decile 10 = top 10%. cutoffAt(q) returns
+  // the largest yhat in the bottom q fraction of the cohort.
+  const N = sortedYhats.length;
+  const cutoffAt = (q) => sortedYhats[Math.max(0, Math.min(N - 1, Math.floor(q * N) - 1))];
+  const loBound = f.decileMin === 1 ? -Infinity : cutoffAt(0.1 * (f.decileMin - 1));
+  const hiBound = f.decileMax === 10 ? Infinity : cutoffAt(0.1 * f.decileMax);
+
+  return beforeDecile.filter((r) => {
+    if (!Number.isFinite(r.yhat_pr)) return false;
+    return r.yhat_pr > loBound && r.yhat_pr <= hiBound;
   });
 }
 

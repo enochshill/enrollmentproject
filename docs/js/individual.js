@@ -26,7 +26,16 @@ function buildPercentileCache(rows) {
     const vals = rows.map((r) => r[cat.key]).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
     cache[cat.key] = vals;
   }
+  cache.yhat_pr = rows.map((r) => r.yhat_pr).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
   return cache;
+}
+
+function dynamicDecile(r) {
+  const sorted = percentileCache?.yhat_pr;
+  if (!sorted || sorted.length === 0 || !Number.isFinite(r.yhat_pr)) return null;
+  const pct = percentileOf(sorted, r.yhat_pr);
+  if (pct === null) return null;
+  return Math.min(10, Math.max(1, Math.ceil(pct * 10)));
 }
 
 function percentileOf(sorted, v) {
@@ -208,7 +217,7 @@ function renderCard(r) {
         </div>
         <div class="headline-item">
           <div class="label">Decile</div>
-          <div class="value">${Number.isFinite(r.decile) ? r.decile : "—"}</div>
+          <div class="value">${dynamicDecile(r) ?? "—"}</div>
         </div>
         <div class="headline-item">
           <div class="label">Status</div>
