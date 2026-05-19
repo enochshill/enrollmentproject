@@ -359,6 +359,12 @@ main { padding: 24px 32px 60px; }
 
 #student-card-wrap .hint { color: var(--muted); font-style: italic; }
 
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
 .student-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -366,6 +372,26 @@ main { padding: 24px 32px 60px; }
   padding: 22px 26px;
   max-width: 880px;
 }
+.cards-grid .student-card { max-width: none; }
+.student-card.is-pinned { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(47,111,235,0.12); }
+.card-header-meta { display: flex; align-items: center; gap: 10px; }
+.pin-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pin-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pin-btn.pinned {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.pin-btn.pinned:hover { background: #1f5cd0; }
 .card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
 .card-name { font-size: 20px; font-weight: 600; margin: 0; }
 .card-name .pref { color: var(--muted); font-weight: 400; }

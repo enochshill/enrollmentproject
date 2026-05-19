@@ -18,6 +18,7 @@ const ACTIVITY_CATEGORIES = [
 let cohortRef = [];          // current filtered cohort
 let percentileCache = null;  // { [key]: sortedAscArray } for current cohort
 let selectedId = null;
+let pinnedId = null;         // when set, this student stays in the card view for side-by-side comparison
 
 // --- Percentile ranks ---
 // For each activity category, sort cohort values ascending. Percentile for a
@@ -180,8 +181,7 @@ function fmtDate(serial) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-function renderCard(r) {
-  const wrap = document.getElementById("student-card-wrap");
+function cardHtml(r, isPinned) {
   const tiles = ACTIVITY_CATEGORIES.map((c) => activityTile(r, c)).join("");
 
   const confirmed = Number(r.confirmed) === 1;
@@ -212,11 +212,17 @@ function renderCard(r) {
     ["Holdout sample", yesNo(r.holdout), "Held out of model training; useful for unbiased evaluation."],
   ];
 
-  wrap.innerHTML = `
-    <div class="student-card">
+  const pinLabel = isPinned ? "📌 Pinned" : "📌 Pin";
+  const pinTitle = isPinned ? "Unpin from comparison" : "Pin this student to compare side-by-side with another";
+
+  return `
+    <div class="student-card ${isPinned ? "is-pinned" : ""}">
       <div class="card-header">
         <h2 class="card-name">${escapeHtml(r.firstname || "")}${r.preferredname && r.preferredname !== r.firstname ? ` <span class="pref">"${escapeHtml(r.preferredname)}"</span>` : ""} ${escapeHtml(r.lastname || "")}</h2>
-        <span class="card-id">ID ${escapeHtml(String(r.applicationreferenceid))}</span>
+        <div class="card-header-meta">
+          <span class="card-id">ID ${escapeHtml(String(r.applicationreferenceid))}</span>
+          <button class="pin-btn ${isPinned ? "pinned" : ""}" data-student-id="${escapeHtml(String(r.applicationreferenceid))}" title="${pinTitle}" type="button">${pinLabel}</button>
+        </div>
       </div>
       <div class="card-headline">
         <div class="headline-item" title="Model's predicted probability that this student confirms enrollment.">
@@ -248,11 +254,46 @@ function renderCard(r) {
   `;
 }
 
+function rerenderCards() {
+  const wrap = document.getElementById("student-card-wrap");
+  if (!wrap) return;
+  const pinnedRow = pinnedId != null ? cohortRef.find((r) => String(r.applicationreferenceid) === String(pinnedId)) : null;
+  const selectedRow = selectedId != null ? cohortRef.find((r) => String(r.applicationreferenceid) === String(selectedId)) : null;
+
+  const cards = [];
+  if (pinnedRow) cards.push(cardHtml(pinnedRow, true));
+  if (selectedRow && (!pinnedRow || String(selectedRow.applicationreferenceid) !== String(pinnedRow.applicationreferenceid))) {
+    cards.push(cardHtml(selectedRow, false));
+  }
+
+  if (cards.length === 0) {
+    if (pinnedId != null || selectedId != null) {
+      wrap.innerHTML = `<p class="hint">The selected student is outside the current filter. Pick another above.</p>`;
+    } else {
+      wrap.innerHTML = `<p class="hint">Pick a student above to see their detail card.</p>`;
+    }
+    return;
+  }
+
+  wrap.innerHTML = `<div class="cards-grid">${cards.join("")}</div>`;
+  for (const btn of wrap.querySelectorAll(".pin-btn")) {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pinStudent(btn.dataset.studentId);
+    });
+  }
+}
+
+function pinStudent(id) {
+  pinnedId = String(pinnedId) === String(id) ? null : id;
+  rerenderCards();
+}
+
 function selectStudent(row) {
   selectedId = row.applicationreferenceid;
   document.getElementById("student-search").value = formatName(row);
   document.getElementById("search-results").hidden = true;
-  renderCard(row);
+  rerenderCards();
 }
 
 // --- Public API ---
@@ -263,15 +304,5 @@ export function initIndividual() {
 export function refreshIndividual(filtered, decileBaseline) {
   cohortRef = filtered;
   percentileCache = buildPercentileCache(filtered, decileBaseline);
-
-  // If a student is currently selected, re-render their card so heat tiles
-  // reflect the new cohort. If they're no longer in the cohort, clear.
-  if (selectedId !== null) {
-    const stillIn = filtered.find((r) => r.applicationreferenceid === selectedId);
-    if (stillIn) {
-      renderCard(stillIn);
-    } else {
-      document.getElementById("student-card-wrap").innerHTML = `<p class="hint">The previously selected student is outside the current filter. Pick another above.</p>`;
-    }
-  }
+  rerenderCards();
 }
