@@ -82,14 +82,15 @@ main { padding: 24px 32px 60px; }
   align-items: flex-end;
   gap: 14px;
   flex-wrap: wrap;
-  background: var(--panel);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 18px;
   margin-bottom: 16px;
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .filter-group { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
