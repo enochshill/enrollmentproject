@@ -36,6 +36,50 @@ export function applyFilters(rows) {
   return applyFilterState(rows, state);
 }
 
+// Encode current filter state for URL hash sharing. Omits defaults.
+export function serializeFilters() {
+  const params = new URLSearchParams();
+  if (state.appTerm) params.set("term", state.appTerm);
+  if (state.confirmed !== "") params.set("confirmed", state.confirmed);
+  if (state.withdrawn !== "") params.set("withdrawn", state.withdrawn);
+  if (state.aequitas !== "") params.set("aequitas", state.aequitas);
+  if (state.legacy) params.set("legacy", state.legacy);
+  if (state.female !== "") params.set("gender", state.female);
+  if (state.decileMin !== 1 || state.decileMax !== 10) {
+    params.set("decile", `${state.decileMin}-${state.decileMax}`);
+  }
+  return params.toString();
+}
+
+// Apply filter state from URL params and sync the UI controls.
+// Does NOT dispatch filterchange — caller is expected to rerender once.
+export function applyUrlFilters(params) {
+  const stringKeys = { term: "appTerm", confirmed: "confirmed", withdrawn: "withdrawn", aequitas: "aequitas", legacy: "legacy", gender: "female" };
+  for (const [urlKey, stateKey] of Object.entries(stringKeys)) {
+    const v = params.get(urlKey);
+    if (v !== null) state[stateKey] = v;
+  }
+  const decile = params.get("decile");
+  if (decile) {
+    const [lo, hi] = decile.split("-").map((s) => Number(s));
+    if (Number.isFinite(lo) && Number.isFinite(hi)) {
+      state.decileMin = Math.max(1, Math.min(10, Math.min(lo, hi)));
+      state.decileMax = Math.max(1, Math.min(10, Math.max(lo, hi)));
+    }
+  }
+  // Sync UI to the new state.
+  document.getElementById("f-appterm").value = state.appTerm;
+  document.getElementById("f-confirmed").value = state.confirmed;
+  document.getElementById("f-withdrawn").value = state.withdrawn;
+  document.getElementById("f-aequitas").value = state.aequitas;
+  document.getElementById("f-legacy").value = state.legacy;
+  document.getElementById("f-female").value = state.female;
+  document.getElementById("f-decile-min").value = state.decileMin;
+  document.getElementById("f-decile-max").value = state.decileMax;
+  document.getElementById("decile-label").textContent =
+    state.decileMin === state.decileMax ? `${state.decileMin}` : `${state.decileMin}–${state.decileMax}`;
+}
+
 export function applyFiltersBeforeDecile(rows) {
   return rows.filter((r) => passesBaseFilters(r, state));
 }

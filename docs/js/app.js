@@ -1,7 +1,7 @@
 // App entry point: wires upload, tabs, and view re-renders to filter changes.
 
 import { parseXlsx } from "./parser.js";
-import { applyFilters, applyFiltersBeforeDecile, bindFilterUI, populateAppTermOptions } from "./filters.js";
+import { applyFilters, applyFiltersBeforeDecile, applyUrlFilters, bindFilterUI, populateAppTermOptions, serializeFilters } from "./filters.js";
 import { renderOverall } from "./overall.js";
 import { initIndividual, refreshIndividual } from "./individual.js";
 import { addSliceFromCurrent, clearSlices, renderSliceChips } from "./slices.js";
@@ -72,7 +72,20 @@ function enterApp() {
   document.getElementById("app-screen").hidden = false;
   document.body.classList.add("loaded");
   populateAppTermOptions(allRows);
+  // Restore filters from the URL hash if one was shared with us.
+  if (location.hash) {
+    applyUrlFilters(new URLSearchParams(location.hash.slice(1)));
+  }
   rerender();
+}
+
+// Mirror the live filter state into the URL hash so views are shareable.
+function syncUrlFromFilters() {
+  const serialized = serializeFilters();
+  const hash = serialized ? `#${serialized}` : "";
+  if (location.hash !== hash) {
+    history.replaceState(null, "", `${location.pathname}${location.search}${hash}`);
+  }
 }
 
 function rerender() {
@@ -145,4 +158,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSlices();
   setupExport();
   document.addEventListener("filterchange", rerender);
+  document.addEventListener("filterchange", syncUrlFromFilters);
 });
