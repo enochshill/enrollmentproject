@@ -3,14 +3,16 @@
 
 import { AEQUITAS, ATHLETE, CITIZENSHIP, lookup, yesNo, legacyLabel } from "./labels.js";
 
+const HEAT_TIP = "Color shows percentile vs. visible cohort, darker red is larger.";
+
 const ACTIVITY_CATEGORIES = [
-  { key: "emailopen_tot", label: "Email opens", format: (v) => v.toFixed(0) },
-  { key: "emailclick_tot", label: "Email clicks", format: (v) => v.toFixed(0) },
-  { key: "logins_tot", label: "Logins", format: (v) => v.toFixed(0) },
-  { key: "ping_tot", label: "Pings", format: (v) => v.toFixed(0) },
-  { key: "sms_tot", label: "SMS", format: (v) => v.toFixed(0) },
-  { key: "visit_tot", label: "Visits", format: (v) => v.toFixed(0) },
-  { key: "zeemeescore", label: "ZeeMee score", format: (v) => v.toFixed(2), missingFlag: "zeemeescore_missing" },
+  { key: "emailopen_tot", label: "Email opens", description: "Admissions emails this student has opened.", format: (v) => v.toFixed(0) },
+  { key: "emailclick_tot", label: "Email clicks", description: "Clicks on links inside admissions emails.", format: (v) => v.toFixed(0) },
+  { key: "logins_tot", label: "Logins", description: "Logins to the applicant portal.", format: (v) => v.toFixed(0) },
+  { key: "ping_tot", label: "Pings", description: "Engagement pings from the CRM.", format: (v) => v.toFixed(0) },
+  { key: "sms_tot", label: "SMS", description: "Text messages with this applicant.", format: (v) => v.toFixed(0) },
+  { key: "visit_tot", label: "Visits", description: "Campus visits — tours, events, etc.", format: (v) => v.toFixed(0) },
+  { key: "zeemeescore", label: "ZeeMee score", description: "Engagement score from the ZeeMee app.", format: (v) => v.toFixed(2), missingFlag: "zeemeescore_missing" },
 ];
 
 let cohortRef = [];          // current filtered cohort
@@ -20,13 +22,18 @@ let selectedId = null;
 // --- Percentile ranks ---
 // For each activity category, sort cohort values ascending. Percentile for a
 // given value = (# of cohort values <= v) / cohort size. Cached per filter.
-function buildPercentileCache(rows) {
+// Activity heat tiles reflect percentile within the current filtered cohort.
+// The yhat_pr cache (used for the headline "Decile" display) instead uses the
+// pre-decile-slider cohort so the displayed decile stays stable as the user
+// scrubs the slider — otherwise "decile of decile" is confusing.
+function buildPercentileCache(rows, decileBaselineRows) {
   const cache = {};
   for (const cat of ACTIVITY_CATEGORIES) {
     const vals = rows.map((r) => r[cat.key]).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
     cache[cat.key] = vals;
   }
-  cache.yhat_pr = rows.map((r) => r.yhat_pr).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  const baseline = decileBaselineRows ?? rows;
+  cache.yhat_pr = baseline.map((r) => r.yhat_pr).filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
   return cache;
 }
 
@@ -137,10 +144,11 @@ function escapeHtml(s) {
 }
 
 function activityTile(r, cat) {
+  const tip = escapeHtml(`${cat.description} ${HEAT_TIP}`);
   const v = r[cat.key];
   const missing = (cat.missingFlag && Number(r[cat.missingFlag]) === 1) || !Number.isFinite(v);
   if (missing) {
-    return `<div class="activity-tile" style="background:var(--heat-na)">
+    return `<div class="activity-tile" style="background:var(--heat-na)" title="${tip}">
       <div class="cat">${escapeHtml(cat.label)}</div>
       <div class="val">—</div>
       <div class="pct">no data</div>
@@ -152,7 +160,7 @@ function activityTile(r, cat) {
   const dark = pct !== null && pct >= 0.75;
   const fg = dark ? "#3a1a10" : "#1a2233";
   const pctText = pct === null ? "—" : `${Math.round(pct * 100)}th pctile`;
-  return `<div class="activity-tile" style="background:${bg};color:${fg}" title="${cat.label}: ${cat.format(v)} — ${pctText}">
+  return `<div class="activity-tile" style="background:${bg};color:${fg}" title="${tip}">
     <div class="cat">${escapeHtml(cat.label)}</div>
     <div class="val">${cat.format(v)}</div>
     <div class="pct">${pctText}</div>
@@ -182,26 +190,26 @@ function renderCard(r) {
   const outcomeClass = confirmed ? "outcome-yes" : withdrawn ? "outcome-no" : "";
 
   const contextRows = [
-    ["App Term", r.AppTerm || "—"],
-    ["Admit date", fmtDate(r.admit_dt)],
-    ["First offer date", fmtDate(r.firstoffer_dt)],
-    ["Latest offer date", fmtDate(r.latestoffer_dt)],
-    ["Distance", fmtMiles(r.milesfromcampus)],
-    ["Legacy", legacyLabel(r)],
-    ["Aequitas", lookup(AEQUITAS, r.aequitas)],
-    ["Citizenship", lookup(CITIZENSHIP, r.citizenshipst)],
-    ["Gender", Number(r.female) === 1 ? "Female" : Number(r.female) === 0 ? "Male" : "—"],
-    ["First-gen", yesNo(r.firstgen)],
-    ["Athlete", lookup(ATHLETE, r.athlete)],
-    ["Test super (concord.)", fmtNum(r.testsuperscoreconcordance, 0)],
-    ["Goodkind avg", fmtNum(r.goodkindaveragescore, 2)],
-    ["ZeeMee score", Number(r.zeemeescore_missing) === 1 ? "—" : fmtNum(r.zeemeescore, 2)],
-    ["Aid: grant", fmtMoney(r.finaidstatustotalgrant)],
-    ["Aid: loan", fmtMoney(r.finaidstatustotalloan)],
-    ["Aid: work-study", fmtMoney(r.finaidstatustotalworkstudy)],
-    ["MK", yesNo(r.mk)],
-    ["TCK", yesNo(r.tck)],
-    ["Holdout sample", yesNo(r.holdout)],
+    ["App Term", r.AppTerm || "—", "Application term cohort."],
+    ["Admit date", fmtDate(r.admit_dt), "Date the student was admitted."],
+    ["First offer date", fmtDate(r.firstoffer_dt), "Date of the first financial aid offer."],
+    ["Latest offer date", fmtDate(r.latestoffer_dt), "Date of the most recent financial aid offer."],
+    ["Distance", fmtMiles(r.milesfromcampus), "Miles from home to campus."],
+    ["Legacy", legacyLabel(r), "Family alumni connection (sibling, parent, other, or none)."],
+    ["Aequitas", lookup(AEQUITAS, r.aequitas), "Aequitas program status."],
+    ["Citizenship", lookup(CITIZENSHIP, r.citizenshipst), "US, Permanent Resident, or Foreign National."],
+    ["Gender", Number(r.female) === 1 ? "Female" : Number(r.female) === 0 ? "Male" : "—", "Gender"],
+    ["First-gen", yesNo(r.firstgen), "First-generation college student."],
+    ["Athlete", lookup(ATHLETE, r.athlete), "Recruited-athlete status (non-athlete / non-football athlete / football)."],
+    ["Test super (concord.)", fmtNum(r.testsuperscoreconcordance, 0), "Concorded SAT/ACT super-score."],
+    ["Goodkind avg", fmtNum(r.goodkindaveragescore, 2), "Average Goodkind reader/interview rating."],
+    ["ZeeMee score", Number(r.zeemeescore_missing) === 1 ? "—" : fmtNum(r.zeemeescore, 2), "Engagement score from the ZeeMee app."],
+    ["Aid: grant", fmtMoney(r.finaidstatustotalgrant), "Total grant aid offered, in USD."],
+    ["Aid: loan", fmtMoney(r.finaidstatustotalloan), "Total loan aid offered, in USD."],
+    ["Aid: work-study", fmtMoney(r.finaidstatustotalworkstudy), "Total work-study offered, in USD."],
+    ["MK", yesNo(r.mk), "Missionary kid."],
+    ["TCK", yesNo(r.tck), "Third-culture kid."],
+    ["Holdout sample", yesNo(r.holdout), "Held out of model training; useful for unbiased evaluation."],
   ];
 
   wrap.innerHTML = `
@@ -211,19 +219,19 @@ function renderCard(r) {
         <span class="card-id">ID ${escapeHtml(String(r.applicationreferenceid))}</span>
       </div>
       <div class="card-headline">
-        <div class="headline-item">
+        <div class="headline-item" title="Model's predicted probability that this student confirms enrollment.">
           <div class="label">yhat_pr</div>
           <div class="value">${fmtNum(r.yhat_pr)}</div>
         </div>
-        <div class="headline-item">
+        <div class="headline-item" title="Student's yhat_pr decile within the cohort, after other filters but ignoring the Decile slider. Higher decile means more likely to confirm.">
           <div class="label">Decile</div>
           <div class="value">${dynamicDecile(r) ?? "—"}</div>
         </div>
-        <div class="headline-item">
+        <div class="headline-item" title="Current outcome: Confirmed, Withdrawn, or Active.">
           <div class="label">Status</div>
           <div class="value ${outcomeClass}">${outcomeText}</div>
         </div>
-        <div class="headline-item">
+        <div class="headline-item" title="The model's binary prediction (Confirm/No), thresholded from yhat_pr.">
           <div class="label">Predicted class</div>
           <div class="value">${Number.isFinite(r.confirmhat_cl) ? (r.confirmhat_cl === 1 ? "Confirm" : "No") : "—"}</div>
         </div>
@@ -234,7 +242,7 @@ function renderCard(r) {
 
       <div class="card-section-title">Context</div>
       <div class="context-grid">
-        ${contextRows.map(([k, v]) => `<div class="row"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(String(v))}</span></div>`).join("")}
+        ${contextRows.map(([k, v, t]) => `<div class="row" title="${escapeHtml(t)}"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(String(v))}</span></div>`).join("")}
       </div>
     </div>
   `;
@@ -252,9 +260,9 @@ export function initIndividual() {
   setupSearch();
 }
 
-export function refreshIndividual(filtered) {
+export function refreshIndividual(filtered, decileBaseline) {
   cohortRef = filtered;
-  percentileCache = buildPercentileCache(filtered);
+  percentileCache = buildPercentileCache(filtered, decileBaseline);
 
   // If a student is currently selected, re-render their card so heat tiles
   // reflect the new cohort. If they're no longer in the cohort, clear.

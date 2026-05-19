@@ -33,11 +33,11 @@
     <section id="app-screen" hidden>
       <!-- Filter bar -->
       <div id="filter-bar">
-        <div class="filter-group">
+        <div class="filter-group" title="Application term cohort (e.g. Fall 2026).">
           <label for="f-appterm">App Term</label>
           <select id="f-appterm"><option value="">All</option></select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group" title="Students who have deposited (confirmed enrollment).">
           <label for="f-confirmed">Confirmed</label>
           <select id="f-confirmed">
             <option value="">All</option>
@@ -45,7 +45,7 @@
             <option value="0">No</option>
           </select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group" title="Students who withdrew after being admitted.">
           <label for="f-withdrawn">Withdrawn</label>
           <select id="f-withdrawn">
             <option value="">All</option>
@@ -53,7 +53,7 @@
             <option value="0">No</option>
           </select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group" title="Aequitas program status.">
           <label for="f-aequitas">Aequitas</label>
           <select id="f-aequitas">
             <option value="">All</option>
@@ -63,7 +63,7 @@
             <option value="3">Accepted</option>
           </select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group" title="Family alumni connection.">
           <label for="f-legacy">Legacy</label>
           <select id="f-legacy">
             <option value="">All</option>
@@ -73,7 +73,7 @@
             <option value="none">None</option>
           </select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group" title="Gender">
           <label for="f-female">Gender</label>
           <select id="f-female">
             <option value="">All</option>
@@ -81,7 +81,7 @@
             <option value="0">Male</option>
           </select>
         </div>
-        <div class="filter-group decile-group">
+        <div class="filter-group decile-group" title="Filter to a yhat_pr decile range. Deciles are computed dynamically from the current cohort: 1 = lowest predicted probability, 10 = highest.">
           <label>Decile <span id="decile-label">1&ndash;10</span></label>
           <div class="decile-controls">
             <input type="range" id="f-decile-min" min="1" max="10" value="1">
@@ -91,9 +91,9 @@
         <div class="filter-spacer"></div>
         <div class="filter-meta">
           <span id="cohort-count">N = 0</span>
-          <button id="save-slice" type="button" title="Snapshot current filter as an overlay on the histogram">+ Save as slice</button>
-          <button id="reset-filters" type="button">Reset</button>
-          <button id="reload-file" type="button">New file</button>
+          <button id="save-slice" type="button" title="Snapshot the current filter as a colored overlay on the histogram so you can compare cohorts.">+ Save as slice</button>
+          <button id="reset-filters" type="button" title="Clear all filters back to defaults.">Reset</button>
+          <button id="reload-file" type="button" title="Discard the current file and return to upload.">New file</button>
         </div>
       </div>
 
@@ -117,19 +117,19 @@
           <div class="chart-controls-row">
             <span class="chart-controls-label">X-axis</span>
             <div class="segmented" role="group" aria-label="X-axis variable">
-              <button type="button" class="seg active" data-xmode="yhat">yhat_pr</button>
-              <button type="button" class="seg" data-xmode="grant">Aid grant</button>
-              <button type="button" class="seg" data-xmode="superscore">Test superscore</button>
-              <button type="button" class="seg" data-xmode="distance">Distance</button>
+              <button type="button" class="seg active" data-xmode="yhat" title="Model's predicted enrollment probability.">yhat_pr</button>
+              <button type="button" class="seg" data-xmode="grant" title="Total grant aid offered, in USD.">Aid grant</button>
+              <button type="button" class="seg" data-xmode="superscore" title="Concorded SAT/ACT super-score.">Test superscore</button>
+              <button type="button" class="seg" data-xmode="distance" title="Miles from home to campus.">Distance</button>
             </div>
           </div>
           <div class="chart-controls-row" id="yaxis-row">
             <span class="chart-controls-label">Y-axis</span>
             <div class="segmented" role="group" aria-label="Y-axis units">
-              <button type="button" class="seg active" data-ymode="percent">% of slice</button>
-              <button type="button" class="seg" data-ymode="count">Students</button>
-              <button type="button" class="seg" data-ymode="ratio" title="Each later slice plotted per-bin as its share of slice 1">Share of slice 1</button>
-              <button type="button" class="seg" data-ymode="yhat_mean" title="Mean yhat_pr per bin">yhat_pr (mean)</button>
+              <button type="button" class="seg active" data-ymode="percent" title="Each bar shows the share of its cohort in that bin. Normalizes for differently-sized cohorts.">% of slice</button>
+              <button type="button" class="seg" data-ymode="count" title="Raw student counts per bin.">Students</button>
+              <button type="button" class="seg" data-ymode="ratio" title="Per bin: each later slice plotted as a ratio to slice 1 (e.g. 25/100 = 0.25).">Share of slice 1</button>
+              <button type="button" class="seg" data-ymode="yhat_mean" title="Per bin: mean yhat_pr of students in that x-bin. Useful when x is grant amount, distance, etc.">yhat_pr (mean)</button>
             </div>
           </div>
         </div>
@@ -140,7 +140,7 @@
       <!-- Individual view -->
       <section id="view-individual" class="view" hidden>
         <div id="search-wrap">
-          <input type="text" id="student-search" placeholder="Search by name or application ID&hellip;" autocomplete="off">
+          <input type="text" id="student-search" placeholder="Search by name or application ID&hellip;" autocomplete="off" title="Search by first/last/preferred name or application ID.">
           <ul id="search-results" hidden></ul>
         </div>
         <div id="student-card-wrap">

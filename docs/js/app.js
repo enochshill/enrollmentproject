@@ -1,7 +1,7 @@
 // App entry point: wires upload, tabs, and view re-renders to filter changes.
 
 import { parseXlsx } from "./parser.js";
-import { applyFilters, bindFilterUI, populateAppTermOptions } from "./filters.js";
+import { applyFilters, applyFiltersBeforeDecile, bindFilterUI, populateAppTermOptions } from "./filters.js";
 import { renderOverall } from "./overall.js";
 import { initIndividual, refreshIndividual } from "./individual.js";
 import { addSliceFromCurrent, clearSlices, renderSliceChips } from "./slices.js";
@@ -77,9 +77,10 @@ function enterApp() {
 
 function rerender() {
   const filtered = applyFilters(allRows);
+  const decileBaseline = applyFiltersBeforeDecile(allRows);
   document.getElementById("cohort-count").textContent = `N = ${filtered.length.toLocaleString()}`;
   renderOverall(filtered, allRows);
-  refreshIndividual(filtered);
+  refreshIndividual(filtered, decileBaseline);
 }
 
 function setupReload() {

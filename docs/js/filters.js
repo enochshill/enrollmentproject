@@ -36,27 +36,33 @@ export function applyFilters(rows) {
   return applyFilterState(rows, state);
 }
 
+export function applyFiltersBeforeDecile(rows) {
+  return rows.filter((r) => passesBaseFilters(r, state));
+}
+
+function passesBaseFilters(r, f) {
+  if (f.appTerm && r.AppTerm !== f.appTerm) return false;
+  if (f.confirmed !== "" && Number(r.confirmed) !== Number(f.confirmed)) return false;
+  if (f.withdrawn !== "" && Number(r.withdrawn) !== Number(f.withdrawn)) return false;
+  if (f.aequitas !== "" && Number(r.aequitas) !== Number(f.aequitas)) return false;
+  if (f.female !== "" && Number(r.female) !== Number(f.female)) return false;
+  if (f.legacy) {
+    const sib = Number(r.legsib) === 1;
+    const par = Number(r.legparent) === 1;
+    const any = Number(r.legany) === 1;
+    if (f.legacy === "any" && !any) return false;
+    if (f.legacy === "sib" && !sib) return false;
+    if (f.legacy === "parent" && !par) return false;
+    if (f.legacy === "none" && any) return false;
+  }
+  return true;
+}
+
 export function applyFilterState(rows, f) {
   // Apply the non-decile filters first. Deciles are computed dynamically below
   // against this intermediate cohort, so the slider always means "deciles of
   // what you're currently looking at" rather than the static upstream column.
-  const beforeDecile = rows.filter((r) => {
-    if (f.appTerm && r.AppTerm !== f.appTerm) return false;
-    if (f.confirmed !== "" && Number(r.confirmed) !== Number(f.confirmed)) return false;
-    if (f.withdrawn !== "" && Number(r.withdrawn) !== Number(f.withdrawn)) return false;
-    if (f.aequitas !== "" && Number(r.aequitas) !== Number(f.aequitas)) return false;
-    if (f.female !== "" && Number(r.female) !== Number(f.female)) return false;
-    if (f.legacy) {
-      const sib = Number(r.legsib) === 1;
-      const par = Number(r.legparent) === 1;
-      const any = Number(r.legany) === 1;
-      if (f.legacy === "any" && !any) return false;
-      if (f.legacy === "sib" && !sib) return false;
-      if (f.legacy === "parent" && !par) return false;
-      if (f.legacy === "none" && any) return false;
-    }
-    return true;
-  });
+  const beforeDecile = rows.filter((r) => passesBaseFilters(r, f));
 
   if (f.decileMin === 1 && f.decileMax === 10) return beforeDecile;
 

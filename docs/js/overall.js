@@ -166,14 +166,14 @@ function renderSummary(filtered) {
   const m = mean(yhats);
   const med = median(yhats);
   const cards = [
-    { label: "Students", value: fmtCount(filtered.length) },
-    { label: "Mean predicted enrollment probability", value: fmtNum(m) },
-    { label: "Median predicted enrollment probability", value: fmtNum(med) },
-    { label: "% Confirmed", value: filtered.length ? fmtPct(confirmedCount / filtered.length) : "—" },
-    { label: "% Withdrawn", value: filtered.length ? fmtPct(withdrawnCount / filtered.length) : "—" },
+    { label: "Students", tip: "Students included in the selected filter(s).", value: fmtCount(filtered.length) },
+    { label: "Mean predicted enrollment probability", tip: "Cohort mean of yhat_pr.", value: fmtNum(m) },
+    { label: "Median predicted enrollment probability", tip: "Middle yhat_pr value — robust to outliers.", value: fmtNum(med) },
+    { label: "% Confirmed", tip: "Share of the filtered cohort who have deposited.", value: filtered.length ? fmtPct(confirmedCount / filtered.length) : "—" },
+    { label: "% Withdrawn", tip: "Share of the filtered cohort who withdrew after admission.", value: filtered.length ? fmtPct(withdrawnCount / filtered.length) : "—" },
   ];
   const html = cards.map((c) => `
-    <div class="summary-card">
+    <div class="summary-card" title="${c.tip}">
       <div class="label">${c.label}</div>
       <div class="value">${c.value}</div>
     </div>
