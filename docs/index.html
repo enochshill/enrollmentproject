@@ -135,6 +135,10 @@
           </div>
         </div>
         <div id="overall-chart"></div>
+        <div id="overall-empty" class="empty-state" hidden>
+          <p>No students match the current filter.</p>
+          <button class="empty-state-btn" type="button">Clear filters</button>
+        </div>
         <p class="chart-help">Histogram of predicted enrollment probability for the filtered cohort. Toggle the confirmed/not-confirmed series with the legend to inspect calibration.</p>
 
         <div id="calibration-section">
@@ -143,6 +147,7 @@
             <div id="calibration-chart"></div>
             <div id="lift-table-wrap"></div>
           </div>
+          <p id="calibration-empty" class="chart-help" hidden>Need at least 20 students for a calibration view.</p>
           <p class="chart-help">Points on the dotted diagonal mean the model is well-calibrated within that decile (predicted ≈ actual). Above the line = the model under-predicts; below = over-predicts.</p>
         </div>
       </section>

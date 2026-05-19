@@ -59,6 +59,11 @@ function bindChartControls() {
       if (lastRender) renderChart(lastRender.filtered, lastRender.allRows);
     });
   }
+  // Static empty-state "Clear filters" button; clicking it triggers a reset.
+  const emptyBtn = document.querySelector("#overall-empty .empty-state-btn");
+  if (emptyBtn) {
+    emptyBtn.addEventListener("click", () => document.getElementById("reset-filters").click());
+  }
   controlsBound = true;
 }
 
@@ -336,15 +341,19 @@ function renderChart(filtered, allRows) {
 // the model is well-calibrated within that bin.
 function renderCalibration(filtered) {
   const chart = document.getElementById("calibration-chart");
+  const empty = document.getElementById("calibration-empty");
   const tableWrap = document.getElementById("lift-table-wrap");
   if (!chart || !tableWrap) return;
 
   const valid = filtered.filter((r) => Number.isFinite(r.yhat_pr));
   if (valid.length < 20) {
-    chart.innerHTML = '<p class="chart-help">Need at least 20 students for a calibration view.</p>';
+    chart.hidden = true;
+    if (empty) empty.hidden = false;
     tableWrap.innerHTML = "";
     return;
   }
+  chart.hidden = false;
+  if (empty) empty.hidden = true;
 
   const sorted = [...valid].sort((a, b) => a.yhat_pr - b.yhat_pr);
   const N = sorted.length;
@@ -429,24 +438,28 @@ export function renderOverall(filtered, allRows) {
     renderEmptyState();
     return;
   }
+  showCharts();
   renderChart(filtered, allRows);
   renderCalibration(filtered);
 }
 
 function renderEmptyState() {
   const chart = document.getElementById("overall-chart");
+  const overallEmpty = document.getElementById("overall-empty");
   const calChart = document.getElementById("calibration-chart");
+  const calEmpty = document.getElementById("calibration-empty");
   const liftWrap = document.getElementById("lift-table-wrap");
-  if (chart) {
-    chart.innerHTML = `
-      <div class="empty-state">
-        <p>No students match the current filter.</p>
-        <button class="empty-state-btn" type="button">Clear filters</button>
-      </div>
-    `;
-    const btn = chart.querySelector(".empty-state-btn");
-    if (btn) btn.addEventListener("click", () => document.getElementById("reset-filters").click());
-  }
-  if (calChart) calChart.innerHTML = "";
+  if (chart) chart.hidden = true;
+  if (overallEmpty) overallEmpty.hidden = false;
+  if (calChart) calChart.hidden = true;
+  if (calEmpty) calEmpty.hidden = true;
   if (liftWrap) liftWrap.innerHTML = "";
+}
+
+// Make sure non-empty renders show the chart divs and hide the empty overlays.
+function showCharts() {
+  const chart = document.getElementById("overall-chart");
+  const overallEmpty = document.getElementById("overall-empty");
+  if (chart) chart.hidden = false;
+  if (overallEmpty) overallEmpty.hidden = true;
 }
