@@ -98,6 +98,7 @@ function setupReload() {
 function setupSlices() {
   document.getElementById("save-slice").addEventListener("click", () => addSliceFromCurrent());
   document.getElementById("clear-slices").addEventListener("click", () => clearSlices());
+  document.getElementById("reset-filters").addEventListener("click", () => clearSlices());
   document.addEventListener("sliceschange", () => {
     renderSliceChips();
     rerender();
