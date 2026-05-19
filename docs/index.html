@@ -135,6 +135,15 @@
         </div>
         <div id="overall-chart"></div>
         <p class="chart-help">Histogram of predicted enrollment probability for the filtered cohort. Toggle the confirmed/not-confirmed series with the legend to inspect calibration.</p>
+
+        <div id="calibration-section">
+          <h3 class="section-title">Calibration &amp; lift <span class="help-icon" title="Calibration plot: how well predicted probabilities match actual confirmation rates per decile of the filtered cohort. Lift table: per-decile breakdown.">?</span></h3>
+          <div class="calibration-row">
+            <div id="calibration-chart"></div>
+            <div id="lift-table-wrap"></div>
+          </div>
+          <p class="chart-help">Points on the dotted diagonal mean the model is well-calibrated within that decile (predicted ≈ actual). Above the line = the model under-predicts; below = over-predicts.</p>
+        </div>
       </section>
 
       <!-- Individual view -->

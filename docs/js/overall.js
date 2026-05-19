@@ -330,6 +330,88 @@ function renderChart(filtered, allRows) {
   Plotly.react("overall-chart", traces, layout, { displaylogo: false, responsive: true });
 }
 
+// --- Calibration & lift table ---
+// Bins the filtered cohort into deciles by yhat_pr, compares predicted prob
+// against actual confirmation rate in each bin. Points on the diagonal mean
+// the model is well-calibrated within that bin.
+function renderCalibration(filtered) {
+  const chart = document.getElementById("calibration-chart");
+  const tableWrap = document.getElementById("lift-table-wrap");
+  if (!chart || !tableWrap) return;
+
+  const valid = filtered.filter((r) => Number.isFinite(r.yhat_pr));
+  if (valid.length < 20) {
+    chart.innerHTML = '<p class="chart-help">Need at least 20 students for a calibration view.</p>';
+    tableWrap.innerHTML = "";
+    return;
+  }
+
+  const sorted = [...valid].sort((a, b) => a.yhat_pr - b.yhat_pr);
+  const N = sorted.length;
+  const bins = [];
+  for (let i = 0; i < 10; i++) {
+    const lo = Math.floor((i / 10) * N);
+    const hi = Math.floor(((i + 1) / 10) * N);
+    const slice = sorted.slice(lo, hi);
+    if (slice.length === 0) continue;
+    const meanPred = slice.reduce((s, r) => s + r.yhat_pr, 0) / slice.length;
+    const confirmed = slice.filter((r) => Number(r.confirmed) === 1).length;
+    bins.push({ decile: i + 1, n: slice.length, confirmed, rate: confirmed / slice.length, meanPred });
+  }
+
+  const traces = [
+    {
+      x: [0, 1], y: [0, 1], mode: "lines", type: "scatter",
+      name: "Perfect calibration",
+      line: { color: "#9aa3b3", dash: "dot", width: 1 },
+      hoverinfo: "skip",
+    },
+    {
+      x: bins.map((b) => b.meanPred),
+      y: bins.map((b) => b.rate),
+      customdata: bins.map((b) => [b.decile, b.n, b.confirmed]),
+      mode: "lines+markers", type: "scatter",
+      name: "Cohort",
+      line: { color: "#2f6feb", width: 2 },
+      marker: { color: "#2f6feb", size: 9 },
+      hovertemplate: "Decile %{customdata[0]}: predicted %{x:.3f}, actual %{y:.1%} (%{customdata[2]}/%{customdata[1]})<extra></extra>",
+    },
+  ];
+  const layout = {
+    margin: { t: 30, r: 20, b: 50, l: 60 },
+    xaxis: { title: "Mean predicted probability", range: [0, 1], gridcolor: "#eef1f7" },
+    yaxis: { title: "Actual confirmation rate", range: [0, 1], gridcolor: "#eef1f7", tickformat: ".0%" },
+    plot_bgcolor: "white", paper_bgcolor: "white",
+    legend: { orientation: "h", x: 0, y: 1.12 },
+  };
+  Plotly.react("calibration-chart", traces, layout, { displaylogo: false, responsive: true });
+
+  // Lift table — highest decile first (conventional for lift).
+  const rows = bins.slice().reverse().map((b) => `
+    <tr>
+      <td>${b.decile}</td>
+      <td>${b.n.toLocaleString()}</td>
+      <td>${b.confirmed.toLocaleString()}</td>
+      <td>${(b.rate * 100).toFixed(1)}%</td>
+      <td>${b.meanPred.toFixed(3)}</td>
+    </tr>
+  `).join("");
+  tableWrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th title="Decile of yhat_pr within the filtered cohort.">Decile</th>
+          <th title="Students in this decile.">N</th>
+          <th title="Students in this decile who have confirmed.">Confirmed</th>
+          <th title="Confirmation rate within this decile.">% Conf.</th>
+          <th title="Mean predicted probability within this decile.">Mean ŷ</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
 export function renderOverall(filtered, allRows) {
   bindChartControls();
   lastRender = { filtered, allRows };
@@ -344,4 +426,5 @@ export function renderOverall(filtered, allRows) {
   }
   renderSummary(filtered);
   renderChart(filtered, allRows);
+  renderCalibration(filtered);
 }
