@@ -220,19 +220,19 @@ function renderCard(r) {
       </div>
       <div class="card-headline">
         <div class="headline-item" title="Model's predicted probability that this student confirms enrollment.">
-          <div class="label">yhat_pr</div>
+          <div class="label">yhat_pr <span class="help-icon" title="Model's predicted probability that this student confirms enrollment.">?</span></div>
           <div class="value">${fmtNum(r.yhat_pr)}</div>
         </div>
         <div class="headline-item" title="Student's yhat_pr decile within the cohort, after other filters but ignoring the Decile slider. Higher decile means more likely to confirm.">
-          <div class="label">Decile</div>
+          <div class="label">Decile <span class="help-icon" title="Student's yhat_pr decile within the cohort, after other filters but ignoring the Decile slider. Higher decile means more likely to confirm.">?</span></div>
           <div class="value">${dynamicDecile(r) ?? "—"}</div>
         </div>
         <div class="headline-item" title="Current outcome: Confirmed, Withdrawn, or Active.">
-          <div class="label">Status</div>
+          <div class="label">Status <span class="help-icon" title="Current outcome: Confirmed, Withdrawn, or Active.">?</span></div>
           <div class="value ${outcomeClass}">${outcomeText}</div>
         </div>
         <div class="headline-item" title="The model's binary prediction (Confirm/No), thresholded from yhat_pr.">
-          <div class="label">Predicted class</div>
+          <div class="label">Predicted class <span class="help-icon" title="The model's binary prediction (Confirm/No), thresholded from yhat_pr.">?</span></div>
           <div class="value">${Number.isFinite(r.confirmhat_cl) ? (r.confirmhat_cl === 1 ? "Confirm" : "No") : "—"}</div>
         </div>
       </div>

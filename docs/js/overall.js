@@ -174,7 +174,7 @@ function renderSummary(filtered) {
   ];
   const html = cards.map((c) => `
     <div class="summary-card" title="${c.tip}">
-      <div class="label">${c.label}</div>
+      <div class="label">${c.label} <span class="help-icon" title="${c.tip}">?</span></div>
       <div class="value">${c.value}</div>
     </div>
   `).join("");

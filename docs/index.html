@@ -34,11 +34,11 @@
       <!-- Filter bar -->
       <div id="filter-bar">
         <div class="filter-group" title="Application term cohort (e.g. Fall 2026).">
-          <label for="f-appterm">App Term</label>
+          <label for="f-appterm">App Term <span class="help-icon" title="Application term cohort (e.g. Fall 2026).">?</span></label>
           <select id="f-appterm"><option value="">All</option></select>
         </div>
         <div class="filter-group" title="Students who have deposited (confirmed enrollment).">
-          <label for="f-confirmed">Confirmed</label>
+          <label for="f-confirmed">Confirmed <span class="help-icon" title="Students who have deposited (confirmed enrollment).">?</span></label>
           <select id="f-confirmed">
             <option value="">All</option>
             <option value="1">Yes</option>
@@ -46,7 +46,7 @@
           </select>
         </div>
         <div class="filter-group" title="Students who withdrew after being admitted.">
-          <label for="f-withdrawn">Withdrawn</label>
+          <label for="f-withdrawn">Withdrawn <span class="help-icon" title="Students who withdrew after being admitted.">?</span></label>
           <select id="f-withdrawn">
             <option value="">All</option>
             <option value="1">Yes</option>
@@ -54,7 +54,7 @@
           </select>
         </div>
         <div class="filter-group" title="Aequitas program status.">
-          <label for="f-aequitas">Aequitas</label>
+          <label for="f-aequitas">Aequitas <span class="help-icon" title="Aequitas program status.">?</span></label>
           <select id="f-aequitas">
             <option value="">All</option>
             <option value="0">Not Aequitas</option>
@@ -64,7 +64,7 @@
           </select>
         </div>
         <div class="filter-group" title="Family alumni connection.">
-          <label for="f-legacy">Legacy</label>
+          <label for="f-legacy">Legacy <span class="help-icon" title="Family alumni connection.">?</span></label>
           <select id="f-legacy">
             <option value="">All</option>
             <option value="any">Any legacy</option>
@@ -82,7 +82,7 @@
           </select>
         </div>
         <div class="filter-group decile-group" title="Filter to a yhat_pr decile range. Deciles are computed dynamically from the current cohort: 1 = lowest predicted probability, 10 = highest.">
-          <label>Decile <span id="decile-label">1&ndash;10</span></label>
+          <label>Decile <span id="decile-label">1&ndash;10</span> <span class="help-icon" title="Filter to a yhat_pr decile range. Deciles are computed dynamically from the current cohort: 1 = lowest predicted probability, 10 = highest.">?</span></label>
           <div class="decile-controls">
             <input type="range" id="f-decile-min" min="1" max="10" value="1">
             <input type="range" id="f-decile-max" min="1" max="10" value="10">
@@ -115,7 +115,7 @@
         <div id="summary-row"></div>
         <div id="chart-controls" hidden>
           <div class="chart-controls-row">
-            <span class="chart-controls-label">X-axis</span>
+            <span class="chart-controls-label">X-axis <span class="help-icon" title="Switch which variable goes on the chart's x-axis. Hover each option to see what it represents.">?</span></span>
             <div class="segmented" role="group" aria-label="X-axis variable">
               <button type="button" class="seg active" data-xmode="yhat" title="Model's predicted enrollment probability.">yhat_pr</button>
               <button type="button" class="seg" data-xmode="grant" title="Total grant aid offered, in USD.">Aid grant</button>
@@ -124,7 +124,7 @@
             </div>
           </div>
           <div class="chart-controls-row" id="yaxis-row">
-            <span class="chart-controls-label">Y-axis</span>
+            <span class="chart-controls-label">Y-axis <span class="help-icon" title="Switch how the chart's y-axis is calculated. Hover each option to see what it represents.">?</span></span>
             <div class="segmented" role="group" aria-label="Y-axis units">
               <button type="button" class="seg active" data-ymode="percent" title="Each bar shows the share of its cohort in that bin. Normalizes for differently-sized cohorts.">% of slice</button>
               <button type="button" class="seg" data-ymode="count" title="Raw student counts per bin.">Students</button>
